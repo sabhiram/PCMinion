@@ -1,14 +1,15 @@
 <html>
+
 <head>
-<title>Main page</title>
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<title>Main page</title>
 </head>
 
 <body style="background-color: #eeeeee;">
+
 	<div id="plugins_list">
 	</div>
 
-
-	<script src="/js/jquery-1.10.2.min.js"></script>
 	<script>
 		var loaded_plugins = <%- JSON.stringify(plugins) %>;
 
@@ -26,10 +27,7 @@
 			}
 			$('#plugins_list').html(html);
 		});
-
 	</script>
+
 </body>
-
-
-
 </html>

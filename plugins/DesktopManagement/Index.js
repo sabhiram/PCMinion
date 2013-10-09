@@ -2,6 +2,7 @@ var _ 		= require('underscore')._;
 var util    = require('util');
 var path    = require('path');
 var fs 		= require('graceful-fs');
+var exec    = require('child_process').exec;
 
 
 // Global settings from the "app"
@@ -48,8 +49,24 @@ Plugin.setup_routes = function() {
 	// GET /
 	app.get('/', function(request, response) {
 		console.log(__dirname);
-		console.log('A @ GET /');
-		response.render('A');
+		console.log('Computer manager @ GET /');
+		response.render('Index');
+	});
+
+	// GET /shutdown
+	app.get('/shutdown', function(request, response) {
+		console.log(__dirname);
+		console.log('Computer manager @ GET /shutdown');
+		response.send('SHUTDOWN');
+		exec('shutdown -s -t 3');
+	});
+
+	// GET /restart
+	app.get('/restart', function(request, response) {
+		console.log(__dirname);
+		console.log('Computer manager @ GET /restart');
+		response.send('RESTART');
+		exec('shutdown -r -t 3');
 	});
 }
 
