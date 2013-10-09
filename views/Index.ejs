@@ -1,0 +1,35 @@
+<html>
+<head>
+<title>Main page</title>
+</head>
+
+<body style="background-color: #eeeeee;">
+	<div id="plugins_list">
+	</div>
+
+
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script>
+		var loaded_plugins = <%- JSON.stringify(plugins) %>;
+
+		// On document ready..
+		$(function() {
+			html = '';
+			for(var idx = 0; idx < loaded_plugins.length; idx++) {
+				var plugin_name = loaded_plugins[idx];
+				html += 
+				'<div>\n' + 
+				'	<a href="/'+plugin_name+'">\n' +
+				'		Plugin #' + (idx + 1) + ' - ' + plugin_name + '\n' + 
+				'   </a>\n' + 
+				'</div>\n';
+			}
+			$('#plugins_list').html(html);
+		});
+
+	</script>
+</body>
+
+
+
+</html>
