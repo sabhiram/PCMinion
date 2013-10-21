@@ -105,20 +105,20 @@ function setup_plugin_routes(callback) {
 						if(plugin_exists) {
 							Console.debug('Loaded plugin: ' + plugin_name);
 							// Load the plugin
-							var plugin = require(plugin_file);
+							var Plugin = require(plugin_file);
+							Plugin.init(function(error) {
+								// Add it to the successfully loaded plugin list
+								loaded_plugins.push(plugin_name);
 
-							// Init, pass global settings object to plugin
-							plugin.init(_settings);
+								// Bind this plugins namespace to its corresponding
+								// app so it will handle all its own HTTP routing
+								app.use('/' + plugin_name, Plugin.get_app());
 
-							// Add it to the successfully loaded plugin list
-							loaded_plugins.push(plugin_name);
-
-							// Bind this plugins namespace to its corresponding
-							// app so it will handle all its own HTTP routing
-							app.use('/' + plugin_name, plugin.get_app());
+								// Done with parallelizable work
+								parallel_fn_callback();
+							});
 						}
-						// Done with parallelizable work
-						parallel_fn_callback();
+						else parallel_fn_callback();
 					});
 				};
 			});
