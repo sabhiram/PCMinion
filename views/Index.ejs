@@ -1,31 +1,60 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-	<script src="/js/jquery-1.10.2.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=1">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/css/style.css">
 	<title>Main page</title>
 </head>
 
-<body style="background-color: #eeeeee;">
+<body>
 
-	<div id="header">
-		Header
-	</div>
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-inverse navbar-static-top">
+      	<div class="container">
+        	<div class="navbar-header">
+          		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+    	      	</button>
+          		<a class="navbar-brand" href="/">PC Minion</a>
+        	</div>
+        	<div class="navbar-collapse collapse">
+          		<ul class="nav navbar-nav navbar-right">
+            		<li><a href="#settings"><i class="fa fa-gear"> Settings</i></a></li>
+            		<li><a href="#about"><i class="fa fa-question-circle"> About</i></a></li>
+          		</ul>
+	        </div><!--/.nav-collapse -->
+    	</div>
+    </div>
 
-	<div id="plugins_list">
-	</div>
+    <div class="container" id="plugins_div">
+    </div> <!-- /container -->
 
-	<div id="footer">
-		Footer
-	</div>
 
+	<!-- 
+		Load these last, the page to be rendered will feel like its
+		loading faster.
+	-->
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
 	<script>
 		var loaded_plugins = <%- JSON.stringify(plugins) %>;
 
 		// On document ready..
 		$(function() {
 			html = '';
+			// TODO: This really should be done w/ backbone...
 			for(var idx = 0; idx < loaded_plugins.length; idx++) {
 				var plugin_name = loaded_plugins[idx];
+				console.log('Plugin ' + plugin_name);
 				html += 
 				'<div>\n' + 
 				'	<a href="/'+plugin_name+'">\n' +
@@ -33,7 +62,10 @@
 				'   </a>\n' + 
 				'</div>\n';
 			}
-			$('#plugins_list').html(html);
+			for(var i = 0; i < 100; i++) {
+				html += '<p>I am the ' + (i + 1) + '\'th row!!</p>';
+			}
+			$('#plugins_div').html(html);
 		});
 	</script>
 
