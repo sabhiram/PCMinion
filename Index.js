@@ -87,6 +87,7 @@ function setup_plugin_routes(callback) {
 	var plugin_dir = path.join(__dirname, 'plugins');
 
 	Async.waterfall([
+
 		// Walk all dirs in ./plugins
 		function walk_plugin_dir(next_function) {
 			fs.readdir(plugin_dir, next_function);
@@ -99,29 +100,52 @@ function setup_plugin_routes(callback) {
 					var plugin_file = path.join(plugin_dir, plugin_name, 'Index.js');
 					Console.debug('Checking plugin file: ' + plugin_file);
 
+					// Watch the plugin_file and reload anytime it changes
+					var plugin_watch_dir = path.join(plugin_dir, plugin_name);
+					fs.watch(plugin_watch_dir, function(event, filename) {
+						// Reload this plugin...
+						// TODO - reload app here
+					});
+
 					// Check for existence of plugin, if its present - then load it
 					// so we can wire up its http routes.
 					fs.exists(plugin_file, function(plugin_exists) {
 						if(plugin_exists) {
-							Console.debug('Loaded plugin: ' + plugin_name);
+							Console.debug('\nLoaded plugin: ' + plugin_name);
 							// Load the plugin
 							var Plugin = require(plugin_file);
-							Plugin.init(function(error) {
-								// Add it to the successfully loaded plugin list
-								loaded_plugins.push(plugin_name);
+							Plugin.init(function(error, plugin_app) {
+								if(error) {
+									Console.debug('Error loading plugin: ' + error);
+									// Skip this plugin...
+									parallel_fn_callback();
+								}
+								else if(typeof(plugin_app) == 'undefined') {
+									var app_error = 'The ' + plugin_name + ' plugin returned a null app!'; 
+									Console.debug(app_error);
+									// Skip this plugin too...
+									parallel_fn_callback();
+								}
+								else {
+									// Add it to the successfully loaded plugin list
+									loaded_plugins.push(plugin_name);
 
-								// Bind this plugins namespace to its corresponding
-								// app so it will handle all its own HTTP routing
-								app.use('/' + plugin_name, Plugin.get_app());
+									// Bind this plugins namespace to its corresponding
+									// app so it will handle all its own HTTP routing
+									app.use('/' + plugin_name, plugin_app);
 
-								// Done with parallelizable work
-								parallel_fn_callback();
+									// Done with this unit of parallelizable work
+									parallel_fn_callback();
+								}
 							});
 						}
 						else parallel_fn_callback();
 					});
 				};
 			});
+			
+			// The above map only defines the would be || functions, run them
+			// as part of this step in this waterfall of initial actions...
 			Async.parallel(parallel_fns, function(error) {
 				if(error) Console.error('Unable to load plugins', error);
 				next_function(error);
