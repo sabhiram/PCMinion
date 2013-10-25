@@ -191,7 +191,18 @@ function load_plugin(plugin_name, plugin_file, app, callback) {
 function copy_icon_to_dynamic_dir(icon_file, plugin_name, callback) {
 	var dynamic_dir = path.join(__dirname, 'public', '_dynamic');
 	var dst_file = path.join(dynamic_dir, plugin_name + '.png');
+	
 	Async.series([
+		// Setup the path for the image in case the plugin does
+		// not provide an icon
+		function setup_source_path(next_step) {
+			fs.exists(icon_file, function(exists) {
+				if(!exists) {
+					icon_file = path.join(__dirname, 'default.png');
+				}
+				next_step();
+			});
+		},
 		// Make the dynamic dir in case it does not exist...
 		function make_dynamic_dir(next_step) {
 			fs.mkdir(dynamic_dir, function(error) {

@@ -6,32 +6,29 @@ var exec    = require('child_process').exec;
 
 var PluginInterface = require('./../../PluginInterface.js');
 
-var DesktopManagement = {
-
-	m_app: null,
+var Plugin = {
 
 	// Default init - calls super init
 	init: function(callback) {
-		console.log('DesktopManagement:: init');
+		console.log('Initializing the DesktopManagement plugin');
 
 		// Init the plugin by calling the super init
 		PluginInterface.init_express(__dirname, function(error, app) {
-			DesktopManagement.m_app = app;
-			DesktopManagement.setup_routes();
-			callback(error);
+			if(error) callback(error, null);
+
+			Plugin.setup_routes(app);
+
+			callback(error, app, [
+				'Desktop Management is a plugin which allows you to do things',
+				'like shutdown, restart control system volume, kill tasks,',
+				'run remote commands and more'
+			].join(' '));
 		});
 	},
 
-	// return the app instance to the framework
-	get_app: function() {
-		return DesktopManagement.m_app;
-	},
-
 	// Custom routes for this plugin
-	setup_routes: function() {
-		console.log('DesktopManagement:: setup_routes');
-
-		var app = DesktopManagement.m_app;
+	setup_routes: function(app) {
+		console.log('Setting up routes for the DesktopManagement Plugin');
 
 		// GET /
 		app.get('/', function(request, response) {
@@ -60,4 +57,4 @@ var DesktopManagement = {
 	},
 };
 
-module.exports = DesktopManagement;
+module.exports = Plugin;

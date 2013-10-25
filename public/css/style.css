@@ -26,7 +26,8 @@ body {
 }
 
 ._pcm_plugin_description_div {
-	background-color: red;
+	line-height: 32px;
+	height: 64px;
 }
 
 ._pcm_plugin_name {

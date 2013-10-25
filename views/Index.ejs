@@ -66,19 +66,24 @@
 				'		<div class="col-xs-2"><i class="fa fa-2x fa-question"></i></div>\n' +
 				'	</div>\n' +
 				'	<div class="row _pcm_plugin_description_div">\n' +
-				'		<div class="col-xs-2"></div>\n' +
-				'		<div class="col-xs-10">'+plugin_description+'</div>\n' +
+				'		<div class="col-xs-12">' +plugin_description+'</div>\n' +
 				'	</div>\n' +
 				'</div>\n';
 			}
 			$('#plugins_div').html(html);
 		});
 
+		$('#plugins_div').on('click', '._pcm_plugin_div', function(event) {
+			console.log($(this).data('plugin_name'));
+			window.location = '/' + $(this).data('plugin_name');
+		});
 		$('#plugins_div').on('click', '.fa-question', function(event) {
+			event.stopPropagation();
 			$(this).closest('div[class^="_pcm_plugin_div"]')
 				.animate({ scrollTop: "64px" });
 		});
 		$('#plugins_div').on('click', '._pcm_plugin_description_div', function(event) {
+			event.stopPropagation();
 			$(this).closest('div[class^="_pcm_plugin_div"]')
 				.animate({ scrollTop: "0px" });
 		});

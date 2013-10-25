@@ -6,8 +6,6 @@ var exec    = require('child_process').exec;
 
 var PluginInterface = require('./../../PluginInterface.js');
 
-var m_app = null;
-
 // Begin module definition here. You can alternatively just define
 // this in a var and export that if you have OCD like that.
 var Plugin = {
@@ -43,7 +41,7 @@ var Plugin = {
 
 			// Routes seemed to be setup ok, lets return the app to
 			// the framework so it can add us to its possible clients
-			callback(null, app, [
+			callback(error, app, [
 				'Test Plugin: This plugin is used to demonstrate how',
 				'easy it is to add a new plugin to the PC Minion framework.',
 				'This is a placeholder description to return back to the app.'

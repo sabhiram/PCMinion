@@ -5,49 +5,49 @@ var fs 				= require('graceful-fs');
 var exec    		= require('child_process').exec;
 var PluginInterface = require('./../../PluginInterface.js');
 
-var VLCPlugin = {
-
-	m_app: null,
-	m_exe_path: null,
+var m_exe_path = null;
+var Plugin = {
 
 	// Default init - calls super init
 	init: function(callback) {
-		console.log('VLCPlugin:: init');
+		console.log('Initializing VLC Plugin');
 
 		// Init the plugin by calling the super init
 		PluginInterface.init_express(__dirname, function(error, app) {
-			VLCPlugin.m_app = app;
-			VLCPlugin.setup_vlc_path();
-			VLCPlugin.setup_routes();
-			callback(error);
+			if(error) callback(error, null);
+
+			Plugin.setup_vlc_path();
+			
+			Plugin.setup_routes(app);
+			
+			callback(error, app, [
+				'VLC Plugin can be used to do things like installing, updating',
+				'and controlling VLC on your PC. This is particularly usefull',
+				'when your tv is connected to the same PC.'
+			].join(' '));
 		});
 	},
 
-	// return the app instance to the framework
-	get_app: function() {
-		return VLCPlugin.m_app;
-	},
-
 	// Custom routes for this plugin
-	setup_routes: function() {
-		console.log('VLCPlugin:: setup_routes');
+	setup_routes: function(app) {
+		console.log('Setting up VLC routes');
 
 		// GET /
-		VLCPlugin.m_app.get('/', function(request, response) {
-			console.log(__dirname);
+		app.get('/', function(request, response) {
 			console.log('VLC @ GET /');
 			response.render('vlc');
 		});
 
 		// GET /
-		VLCPlugin.m_app.get('/open', function(request, response) {
+		app.get('/open', function(request, response) {
 			console.log('VLC @ GET /open');
-			if(VLCPlugin.m_exe_path == null) {
+			if(Plugin.m_exe_path == null) {
 				console.log('Exe is not defined - error!');
 				response.send('Error - exe is not defined');
 			}
 			else {
-				exec('"' + VLCPlugin.m_exe_path + '"', function(error, stdout, stderr) {
+				// Spawn VLC
+				exec('"' + Plugin.m_exe_path + '"', function(error, stdout, stderr) {
 					console.log('stdout: ' + stdout);
 				    console.log('stderr: ' + stderr);
 				    if (error !== null) {
@@ -58,18 +58,19 @@ var VLCPlugin = {
 		});
 	},
 
+	// Setup VLC paths so we can launch it etc
 	setup_vlc_path: function() {
-		vlc_path = path.join(process.env['PROGRAMFILES'], 'VideoLAN', 'VLC', 'vlc.exe');
+		var vlc_path = path.join(process.env['PROGRAMFILES'], 'VideoLAN', 'VLC', 'vlc.exe');
 		fs.exists(vlc_path, function(exists) {
 			if(exists) {
-				VLCPlugin.m_exe_path = vlc_path;
+				Plugin.m_exe_path = vlc_path;
 			}
 			else {
 				// Perhaps this is a 32bit app on a x64 machine
 				vlc_x86_path = path.join(process.env['PROGRAMFILES(X86)'], 'VideoLAN', 'VLC', 'vlc.exe');
 				fs.exists(vlc_x86_path, function(exists) {
 					if(exists) {
-						VLCPlugin.m_exe_path = vlc_x86_path;
+						Plugin.m_exe_path = vlc_x86_path;
 					}
 				});
 			}
@@ -77,4 +78,4 @@ var VLCPlugin = {
 	},
 };
 
-module.exports = VLCPlugin;
+module.exports = Plugin;
