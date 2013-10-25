@@ -35,7 +35,7 @@
     	</div>
     </div>
 
-    <div class="container" id="plugins_div">
+    <div id="plugins_div">
     </div> <!-- /container -->
 
 
@@ -53,19 +53,34 @@
 			html = '';
 			// TODO: This really should be done w/ backbone...
 			for(var idx = 0; idx < loaded_plugins.length; idx++) {
-				var plugin_name = loaded_plugins[idx];
+				var plugin_name 		= loaded_plugins[idx]['name'];
+				var plugin_description 	= loaded_plugins[idx]['description'];
 				console.log('Plugin ' + plugin_name);
 				html += 
-				'<div>\n' + 
-				'	<a href="/'+plugin_name+'">\n' +
-				'		Plugin #' + (idx + 1) + ' - ' + plugin_name + '\n' + 
-				'   </a>\n' + 
+				'<div class="_pcm_plugin_div" data-plugin_name="'+plugin_name+'">\n' + 
+				'	<div class="row">\n' +
+				'		<div class="col-xs-2 ">\n' +
+				'			<img class="_pcm_plugin_icon" src="/_dynamic/' + plugin_name + '.png"></img>\n' +
+				'		</div>\n' +
+				'		<div class="col-xs-8 _pcm_plugin_name">' + plugin_name + '</div>\n' +
+				'		<div class="col-xs-2"><i class="fa fa-2x fa-question"></i></div>\n' +
+				'	</div>\n' +
+				'	<div class="row _pcm_plugin_description_div">\n' +
+				'		<div class="col-xs-2"></div>\n' +
+				'		<div class="col-xs-10">'+plugin_description+'</div>\n' +
+				'	</div>\n' +
 				'</div>\n';
 			}
-			for(var i = 0; i < 100; i++) {
-				html += '<p>I am the ' + (i + 1) + '\'th row!!</p>';
-			}
 			$('#plugins_div').html(html);
+		});
+
+		$('#plugins_div').on('click', '.fa-question', function(event) {
+			$(this).closest('div[class^="_pcm_plugin_div"]')
+				.animate({ scrollTop: "64px" });
+		});
+		$('#plugins_div').on('click', '._pcm_plugin_description_div', function(event) {
+			$(this).closest('div[class^="_pcm_plugin_div"]')
+				.animate({ scrollTop: "0px" });
 		});
 	</script>
 

@@ -100,44 +100,30 @@ function setup_plugin_routes(callback) {
 					var plugin_file = path.join(plugin_dir, plugin_name, 'Index.js');
 					Console.debug('Checking plugin file: ' + plugin_file);
 
-					// Watch the plugin_file and reload anytime it changes
-					var plugin_watch_dir = path.join(plugin_dir, plugin_name);
-					fs.watch(plugin_watch_dir, function(event, filename) {
-						// Reload this plugin...
-						// TODO - reload app here
-					});
-
 					// Check for existence of plugin, if its present - then load it
 					// so we can wire up its http routes.
 					fs.exists(plugin_file, function(plugin_exists) {
 						if(plugin_exists) {
 							Console.debug('\nLoaded plugin: ' + plugin_name);
+							
 							// Load the plugin
-							var Plugin = require(plugin_file);
-							Plugin.init(function(error, plugin_app) {
-								if(error) {
-									Console.debug('Error loading plugin: ' + error);
-									// Skip this plugin...
-									parallel_fn_callback();
-								}
-								else if(typeof(plugin_app) == 'undefined') {
-									var app_error = 'The ' + plugin_name + ' plugin returned a null app!'; 
-									Console.debug(app_error);
-									// Skip this plugin too...
-									parallel_fn_callback();
-								}
-								else {
-									// Add it to the successfully loaded plugin list
-									loaded_plugins.push(plugin_name);
+							load_plugin(plugin_name, plugin_file, app, parallel_fn_callback);
 
-									// Bind this plugins namespace to its corresponding
-									// app so it will handle all its own HTTP routing
-									app.use('/' + plugin_name, plugin_app);
-
-									// Done with this unit of parallelizable work
-									parallel_fn_callback();
-								}
-							});
+							// DISABLED CODE // DISABLED CODE // DISABLED CODE // DISABLED CODE
+							// Potentially explore auto-restarting the server / plugin as and
+							// when it changes. This is probably easiest w/ something like
+							// nssm or supervisor for node.
+							// // Setup a watch on this plugin so we can reload it
+							// var plugin_path = path.join(plugin_dir, plugin_name);
+							// fs.watch(plugin_path, function(event, filename) {
+							// 	if(filename && filename.match(/^.*\.js$/)) {
+							// 		Console.log('Event: ' + event + ' @File: ' + filename);
+							// 		load_plugin(plugin_name, plugin_file, app, function(error) {
+							// 			console.log(app.routes);
+							// 		});
+							// 	}
+							// });
+							// DISABLED CODE // DISABLED CODE // DISABLED CODE // DISABLED CODE
 						}
 						else parallel_fn_callback();
 					});
@@ -154,5 +140,83 @@ function setup_plugin_routes(callback) {
 	], function(error) {
 		if(error) Console.error('Unable to setup plugin routes', error);
 		callback(error);
+	});
+}
+
+function load_plugin(plugin_name, plugin_file, app, callback) {
+	Console.debug('Loading plugin:');
+	Console.debug('    Name 		- ' + plugin_name);
+	Console.debug('    FileName 	- ' + plugin_file);
+
+	var Plugin = require(plugin_file);
+	Plugin.init(function(error, plugin_app, plugin_description) {
+		if(typeof(plugin_description) == 'undefined') {
+			plugin_description = 'No description for this plugin, bad developer!';
+		}
+		if(error) {
+			Console.debug('Error loading plugin: ' + error);
+			// Skip this plugin...
+			callback();
+		}
+		else if(typeof(plugin_app) == 'undefined') {
+			var app_error = 'The ' + plugin_name + ' plugin returned a null app!'; 
+			Console.debug(app_error);
+			// Skip this plugin too...
+			callback();
+		}
+		else {
+			if(_.contains(loaded_plugins, plugin_name) == false) {
+				// Add it to the successfully loaded plugin list
+				loaded_plugins.push({
+					name: plugin_name,
+					description: plugin_description
+				});
+
+				// If this has an icon, pull it into the main app's
+				// public folder
+				var icon_file = path.join(__dirname, 'plugins', plugin_name, 'icon.png');
+				copy_icon_to_dynamic_dir(icon_file, plugin_name);
+			}
+
+			// Bind this plugin's namespace to its corresponding
+			// app so it will handle all its own HTTP routing
+			app.use('/' + plugin_name, plugin_app);
+
+			// Done with this unit of work
+			callback();
+		}
+	});
+}
+
+function copy_icon_to_dynamic_dir(icon_file, plugin_name, callback) {
+	var dynamic_dir = path.join(__dirname, 'public', '_dynamic');
+	var dst_file = path.join(dynamic_dir, plugin_name + '.png');
+	Async.series([
+		// Make the dynamic dir in case it does not exist...
+		function make_dynamic_dir(next_step) {
+			fs.mkdir(dynamic_dir, function(error) {
+				// Ignore the error in case it already exists...
+				next_step();
+			});
+		},
+		// Delete the dst file if its there...
+		function delete_destination_image(next_step) {
+			fs.exists(dst_file, function(exists) {
+				if(exists) {
+					Console.log('Deleting file ' + dst_file);
+					fs.unlink(dst_file, next_step);
+				}
+				else next_step();
+			});
+		},
+		// Move this file into the dynamic dir
+		function move_file_to_dir(next_step) {
+			var input_stream = fs.createReadStream(icon_file);
+			var output_stream = fs.createWriteStream(dst_file);
+			input_stream.pipe(output_stream);
+		}
+	], function(error) {
+		if(error) Console.error('Unable to copy icon to dynamic dir. Error: ' + error);
+		if(typeof(callback) == 'function') callback(error);
 	});
 }

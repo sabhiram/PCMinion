@@ -23,8 +23,8 @@ var Plugin = {
 	//		point just call into the PluginInterface, and ask it to
 	// 		initialize express using the init_express function.
 	// Inputs: callback - function to call once we are done. The function
-	// 					  takes the form of function(error, app) which
-	//					  are returned to the harness framework.
+	// 					  takes the form of function(error, app, description)
+	//					  which are returned to the harness framework.
 	init: function(callback) {
 		console.log('Initializing the Test Plugin');
 
@@ -43,7 +43,11 @@ var Plugin = {
 
 			// Routes seemed to be setup ok, lets return the app to
 			// the framework so it can add us to its possible clients
-			callback(null, app);
+			callback(null, app, [
+				'Test Plugin: This plugin is used to demonstrate how',
+				'easy it is to add a new plugin to the PC Minion framework.',
+				'This is a placeholder description to return back to the app.'
+			].join(' '));
 		});
 	},
 
@@ -69,16 +73,19 @@ var Plugin = {
 
 		// GET /1
 		app.get('/1', function(request, response) {
+			console.log('Got /Test/1');
 			response.send('1');
 		});
 
 		// GET /2
 		app.get('/2', function(request, response) {
+			console.log('Got /Test/2');
 			response.send('2');
 		});
 
 		// GET /3
 		app.get('/3', function(request, response) {
+			console.log('Got /Test/3');
 			response.end();
 		});
 	}

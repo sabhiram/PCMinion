@@ -1,3 +1,11 @@
 1. Auto document Rest API + Hook to do this for all plugins
-2. Independant view / public management per plugin
 3. Auto configure port / server name / whathaveyou
+4. 
+
+WIP:
+----
+2. Independant view / public management per plugin. Maybe we also add the ability to specify other folders other than public and view whilst
+still using the PluginInterface?
+
+DONE:
+-----

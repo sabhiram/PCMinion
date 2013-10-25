@@ -1,2 +1,44 @@
+body {
+	background-color: #222222;
+	color: #787878;
+}
+
+.navbar {
+	min-height: 40px;
+	margin-bottom: 0px;
+}
+.navbar-inverse .navbar-brand {
+	color: #EEEEEE;
+}
+
 #plugins_div {
+}
+
+._pcm_plugin_div {
+	cursor: pointer;
+	padding: 0;
+	margin: 0;
+	background-color: #222222;
+	border-bottom: 2px solid #080808;
+	height: 64px;
+	line-height: 64px;
+	overflow: hidden;
+}
+
+._pcm_plugin_description_div {
+	background-color: red;
+}
+
+._pcm_plugin_name {
+	font-size: 18pt;
+}
+
+._pcm_plugin_icon {
+	position: absolute;
+	top: 8px;
+	left: 22px;
+	width: 46px;
+	height: 46px;
+	border: 2px solid #080808;/*#bcbc2d;*/
+	border-radius: 4px;
 }
