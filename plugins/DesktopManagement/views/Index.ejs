@@ -1,7 +1,19 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=1">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/css/style.css">
 	<title>Desktop Manager Page</title>
+
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body style="background-color: #eeeeee;">
@@ -10,7 +22,139 @@
 	<br>
 	<div><a href="/DesktopManagement/restart">Restart</a></div>
 	<br>
-	<div><a href="/DesktopManagement/beep">BEEP!!</a></div>
+	
+	<div class="row" style="">
+		<input id="keyboard_input" class="col-xs-9" style="height: 50px" placeholder="Send Keyboard Keys (AHK script friendly)"></input>
+		<div id="send_keys_btn" class="btn btn-primary col-xs-3" style="line-height: 45px; height: 50px; border-radius: 0;">Send</div>
+	</div>
+	<div class="row" style="background-color: #333333;">
+		<div class="col-xs-1"></div>
+		<canvas class="col-xs-10" id="mouse_canvas" style="background-color: #555555; height: 400px;">
+			<strong>[Your browser can not use a canvas.]</strong>
+		</canvas>
+		<div class="col-xs-1"></div>
+	</div>
+	<div class="row">
+		<div class="btn btn-inverse col-xs-5" id="left_click_btn" style="border: 2px solid #333333; background-color: #555555; border-radius: 0; height: 64px; line-height: 46px;">Left Click</div>
+		<div class="btn btn-inverse col-xs-2" id="dbl_click_btn" style="border: 2px solid #333333; background-color: #555555; border-radius: 0; height: 64px; line-height: 46px;">2x Click</div>
+		<div class="btn btn-inverse col-xs-5" id="right_click_btn" style="border: 2px solid #333333; background-color: #555555; border-radius: 0; height: 64px; line-height: 46px;">Right Click</div>
+	</div>
 
+	<div id="console_log" style="font-size: 14pt;"></div>
+
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script src="/DesktopManagement/foo.js"></script>
+	<script>
+		$('.row').on('click', '#right_click_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/DesktopManagement/right_click',
+			});
+		});
+		$('.row').on('click', '#left_click_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/DesktopManagement/left_click',
+			});
+		});
+		$('.row').on('click', '#dbl_click_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/DesktopManagement/double_click',
+			});
+		});
+		$('.row').on('click', '#send_keys_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/DesktopManagement/send_keys',
+				data: $('#keyboard_input').val(),
+				dataType: 'text'
+			});
+			$('#keyboard_input').val('');
+		});
+
+		// Author: Richard Garside - www.nogginbox.co.uk [2010]
+		var cb_canvas = null;
+		var cb_ctx = null;
+		var cb_lastPoints = null;
+		var cb_easing = 0.4;
+
+		// Setup event handlers
+		window.onload = init;
+		function init(e) {
+			cb_canvas = document.getElementById("mouse_canvas");
+			cb_lastPoints = Array();
+
+			if (cb_canvas.getContext) {
+				cb_canvas.ontouchstart = startDraw;
+				cb_canvas.ontouchstop = stopDraw;
+				cb_canvas.ontouchmove = drawMouse;
+			}
+		}
+
+		function startDraw(e) {
+			if (e.touches) {
+				// Touch event
+				for (var i = 1; i <= e.touches.length; i++) {
+					cb_lastPoints[i] = getCoords(e.touches[i - 1]); // Get info for finger #1
+				}
+			}
+			else {
+				// Mouse event
+				cb_lastPoints[0] = getCoords(e);
+			}
+			
+			return false;
+		}
+
+		// Called whenever cursor position changes after drawing has started
+		function stopDraw(e) {
+			e.preventDefault();
+		}
+
+		function drawMouse(e) {
+			if (e.touches) {
+				// Touch Enabled
+				for (var i = 1; i <= e.touches.length; i++) {
+					var p = getCoords(e.touches[i - 1]); // Get info for finger i
+					cb_lastPoints[i] = drawLine(cb_lastPoints[i].x, cb_lastPoints[i].y, p.x, p.y);
+				}
+			}
+			else {
+				// Not touch enabled
+				var p = getCoords(e);
+				cb_lastPoints[0] = drawLine(cb_lastPoints[0].x, cb_lastPoints[0].y, p.x, p.y);
+			}
+			return false;
+		}
+
+		// Draw a line on the canvas from (s)tart to (e)nd
+		function drawLine(sX, sY, eX, eY) {
+			$.ajax({
+				type: "POST",
+				url: '/DesktopManagement/move_mouse',
+				data: JSON.stringify({
+					x_delta: eX - sX,
+					y_delta: eY - sY
+				}),
+				dataType: "json"
+			});
+			return { x: eX, y: eY };
+		}
+
+		// Get the coordinates for a mouse or touch event
+		function getCoords(e) {
+			if (e.offsetX) {
+				return { x: e.offsetX, y: e.offsetY };
+			}
+			else if (e.layerX) {
+				return { x: e.layerX, y: e.layerY };
+			}
+			else {
+				return { x: e.pageX - cb_canvas.offsetLeft, y: e.pageY - cb_canvas.offsetTop };
+			}
+		}
+	</script>
 </body>
 </html>

@@ -72,7 +72,9 @@ var Plugin = {
 		// GET /1
 		app.get('/1', function(request, response) {
 			console.log('Got /Test/1');
-			response.send('1');
+			PluginInterface.run_ahk_script('Run www.google.com', '', function(error) {
+				response.send('1');
+			});
 		});
 
 		// GET /2

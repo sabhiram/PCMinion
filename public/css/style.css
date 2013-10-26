@@ -1,6 +1,7 @@
 body {
 	background-color: #222222;
 	color: #787878;
+	padding-top: 51px;
 }
 
 .navbar {
@@ -14,6 +15,7 @@ body {
 #plugins_div {
 }
 
+
 ._pcm_plugin_div {
 	cursor: pointer;
 	padding: 0;
@@ -24,10 +26,17 @@ body {
 	line-height: 64px;
 	overflow: hidden;
 }
-
+._pcm_plugin_div:hover {
+	background-color: #434333;
+}
+._pcm_plugin_div:hover {
+	border: 2px solid #989828;
+}
 ._pcm_plugin_description_div {
-	line-height: 32px;
-	height: 64px;
+	line-height: 24px;
+	font-size: 13pt;
+	padding: 5px;
+	margin-bottom: 5px;
 }
 
 ._pcm_plugin_name {

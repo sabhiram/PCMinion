@@ -16,7 +16,7 @@
 <body>
 
 	<!-- Fixed navbar -->
-    <div class="navbar navbar-inverse navbar-static-top">
+    <div class="navbar navbar-inverse navbar-fixed-top">
       	<div class="container">
         	<div class="navbar-header">
           		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -63,7 +63,7 @@
 				'			<img class="_pcm_plugin_icon" src="/_dynamic/' + plugin_name + '.png"></img>\n' +
 				'		</div>\n' +
 				'		<div class="col-xs-8 _pcm_plugin_name">' + plugin_name + '</div>\n' +
-				'		<div class="col-xs-2"><i class="fa fa-2x fa-question"></i></div>\n' +
+				'		<div class="col-xs-2 _pcm_more_info"><i class="fa fa-2x fa-plus"></i></div>\n' +
 				'	</div>\n' +
 				'	<div class="row _pcm_plugin_description_div">\n' +
 				'		<div class="col-xs-12">' +plugin_description+'</div>\n' +
@@ -77,15 +77,37 @@
 			console.log($(this).data('plugin_name'));
 			window.location = '/' + $(this).data('plugin_name');
 		});
-		$('#plugins_div').on('click', '.fa-question', function(event) {
+
+		$('#plugins_div').on('click', '._pcm_more_info', function(event) {
 			event.stopPropagation();
-			$(this).closest('div[class^="_pcm_plugin_div"]')
-				.animate({ scrollTop: "64px" });
-		});
-		$('#plugins_div').on('click', '._pcm_plugin_description_div', function(event) {
-			event.stopPropagation();
-			$(this).closest('div[class^="_pcm_plugin_div"]')
-				.animate({ scrollTop: "0px" });
+			// Toggle logic
+			if($(this).hasClass('_pcm_visible')) {
+				// Hide description and turn the - into a +
+				$(this).closest('div[class^="_pcm_plugin_div"]')
+					.animate({ height: "64px" });
+				$(this)
+					.find('.fa-minus')
+					.removeClass('fa-minus')
+					.addClass('fa-plus');
+				$(this).removeClass('_pcm_visible');
+			}
+			else {
+				console.log($(this).find('.fa-plus'));
+				var new_height = 
+					$(this)
+						.closest('div[class^="_pcm_plugin_div"]')
+						.find('._pcm_plugin_description_div')
+						.outerHeight() + 64;
+
+				// Show full div - and turn the + into a -
+				$(this).closest('div[class^="_pcm_plugin_div"]')
+					.animate({ height: new_height });
+				$(this)
+					.find('.fa-plus')
+					.removeClass('fa-plus')
+					.addClass('fa-minus');
+				$(this).addClass('_pcm_visible');
+			}
 		});
 	</script>
 

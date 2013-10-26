@@ -56,6 +56,20 @@ var Plugin = {
 				});
 			}
 		});
+
+		app.post('/volume_up', function(request, response) {
+			console.log('VLC Volume UP');
+			PluginInterface.run_ahk_script('Send ^{Up}', '', function(error, stderr) {
+				response.send('ok');
+			});
+		});
+
+		app.post('/volume_down', function(request, response) {
+			console.log('VLC Volume UP');
+			PluginInterface.run_ahk_script('Send ^{Down}', '', function(error, stderr) {
+				response.send('ok');
+			});
+		});
 	},
 
 	// Setup VLC paths so we can launch it etc

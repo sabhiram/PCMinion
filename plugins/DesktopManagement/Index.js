@@ -50,9 +50,53 @@ var Plugin = {
 			exec('shutdown -r -t 3');
 		});
 
-		app.get('/beep', function(request, response) {
-			console.log('Computer manager @ GET /beep');
-			response.redirect('/DesktopManagement');
+		app.post('/move_mouse', function(request, response) {
+			console.log('Computer manager @ POST /move_mouse');
+			var data = '';
+			request.on('data', function(chunk) {
+				data += chunk;
+			}).on('end', function() {
+				var xy_delta = JSON.parse(data);
+				//console.log(util.inspect(xy_delta));
+				var cmd = 'MouseMove, ' + xy_delta['x_delta'] + ', ' + xy_delta['y_delta'] + ', 2, R';
+				console.log('CMD: ' + cmd);
+				PluginInterface.run_ahk_script(cmd, '/f', function(error, stderr) {
+					response.send(stderr);
+				});
+			});
+		});
+
+		app.post('/left_click', function(request, response) {
+			console.log('Computer manager @ POST /left_click');
+			PluginInterface.run_ahk_script('Click', '', function(error, stderr) {
+				response.send('OK');
+			});
+		});
+
+		app.post('/right_click', function(request, response) {
+			console.log('Computer manager @ POST /right_click');
+			PluginInterface.run_ahk_script('Click right', '', function(error, stderr) {
+				response.send('OK');
+			});
+		});
+
+		app.post('/double_click', function(request, response) {
+			console.log('Computer manager @ POST /double_click');
+			PluginInterface.run_ahk_script('Click 2', '', function(error, stderr) {
+				response.send('OK');
+			});
+		});
+
+		app.post('/send_keys', function(request, response) {
+			console.log('Computer manager @ POST /right_click');
+			var data = '';
+			request.on('data', function(chunk) {
+				data += chunk;
+			}).on('end', function() {
+				PluginInterface.run_ahk_script('Send ' + data, '/f', function(error, stderr) {
+					response.send('OK');
+				});
+			});
 		});
 	},
 };

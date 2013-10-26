@@ -2,13 +2,40 @@
 
 <head>
 	<title>B's page</title>
+
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/css/style.css">
+
 </head>
 
 <body style="background-color: #eeeeee;">
 
 	<div><a href="/vlc/open">Open VLC</a></div>
-	<div><a href="/vlc/volume_up">Volume Up</a></div>
-	<div><a href="/vlc/volume_down">Volume Down</a></div>
+	<br>
+	<div><a class="_vlc_volume_up" href="#">Volume Up</a></div>
+	<br>
+	<div><a class="_vlc_volume_down" href="#">Volume Down</a></div>
+	<br>
 
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script>
+		// On document ready..
+		$(function() {
+			console.log('Page load!');
+		});
+		$('body').on('click', '._vlc_volume_up', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/vlc/volume_up'
+			});
+		});
+		$('body').on('click', '._vlc_volume_down', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/vlc/volume_down'
+			});
+		});
+	</script>
 </body>
 </html>
