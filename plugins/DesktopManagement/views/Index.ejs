@@ -12,12 +12,9 @@
 	<link rel="stylesheet" href="/css/style.css">
 	<title>Desktop Manager Page</title>
 
-	<link rel="stylesheet" href="/css/bootstrap.css">
-	<link rel="stylesheet" href="/css/style.css">
 </head>
 
-<body style="background-color: #eeeeee;">
-
+<body>
 	<div><a href="/DesktopManagement/shutdown">Shutdown</a></div>
 	<br>
 	<div><a href="/DesktopManagement/restart">Restart</a></div>
@@ -43,8 +40,12 @@
 	<div id="console_log" style="font-size: 14pt;"></div>
 
 	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script src="/js/underscore.js"></script>
 	<script src="/js/bootstrap.min.js"></script>
-	<script src="/DesktopManagement/foo.js"></script>
+
+	<!-- TEST INCLUDE YOUR OWN NAMESPACE -->
+	<script src="/js/hammer.js"></script>
+
 	<script>
 		$('.row').on('click', '#right_click_btn', function(event) {
 			$.ajax({
@@ -79,21 +80,45 @@
 		var cb_ctx = null;
 		var cb_lastPoints = null;
 		var cb_easing = 0.4;
+		var x_scale = 2.2;
+		var y_scale = 2.2;
+		var mouse_moved = false;
 
 		// Setup event handlers
 		window.onload = init;
 		function init(e) {
 			cb_canvas = document.getElementById("mouse_canvas");
 			cb_lastPoints = Array();
-
+			var throttled_start_touch = _.throttle(start_touch, 64);
+			var throttled_stop_touch = _.throttle(stop_touch, 64);
+			var throttled_update_mouse = _.throttle(update_mouse, 64);
 			if (cb_canvas.getContext) {
-				cb_canvas.ontouchstart = startDraw;
-				cb_canvas.ontouchstop = stopDraw;
-				cb_canvas.ontouchmove = drawMouse;
+				cb_canvas.ontouchstart = throttled_start_touch;
+				cb_canvas.ontouchstop  = throttled_stop_touch;
+				cb_canvas.ontouchmove  = throttled_update_mouse;
 			}
+			Hammer(cb_canvas).on("tap", function(event) {
+				$.ajax({
+					type: "POST",
+					url: '/DesktopManagement/left_click',
+				});
+			});
+			Hammer(cb_canvas).on("hold", function(event) {
+				$.ajax({
+					type: "POST",
+					url: '/DesktopManagement/right_click',
+				});
+			});
+			Hammer(cb_canvas).on("doubletap", function(event) {
+				$.ajax({
+					type: "POST",
+					url: '/DesktopManagement/double_click',
+				});
+			});
 		}
 
-		function startDraw(e) {
+		function start_touch(e) {
+			mouse_moved = false;
 			if (e.touches) {
 				// Touch event
 				for (var i = 1; i <= e.touches.length; i++) {
@@ -109,11 +134,15 @@
 		}
 
 		// Called whenever cursor position changes after drawing has started
-		function stopDraw(e) {
+		function stop_touch(e) {
+			if(!mouse_moved) {
+				// This is a click...
+			}
 			e.preventDefault();
 		}
 
-		function drawMouse(e) {
+		function update_mouse(e) {
+			mouse_moved = true;
 			if (e.touches) {
 				// Touch Enabled
 				for (var i = 1; i <= e.touches.length; i++) {
@@ -135,8 +164,8 @@
 				type: "POST",
 				url: '/DesktopManagement/move_mouse',
 				data: JSON.stringify({
-					x_delta: eX - sX,
-					y_delta: eY - sY
+					x_delta: x_scale * (eX - sX),
+					y_delta: y_scale * (eY - sY)
 				}),
 				dataType: "json"
 			});

@@ -134,7 +134,16 @@ function setup_plugin_routes(callback) {
 			// as part of this step in this waterfall of initial actions...
 			Async.parallel(parallel_fns, function(error) {
 				if(error) Console.error('Unable to load plugins', error);
-				next_function(error);
+				// DISABLED CODE // DISABLED CODE // DISABLED CODE // DISABLED CODE
+				// This is experimental code to "install" an app which might have 
+				// been npm installed :). Usage would be somethign like 
+				// npm install PCM_VLCRemote --save or something like that
+				// then we would be able to load it thusly
+				load_plugin('Test2', 'Test2', app, function(error) {
+					next_function(error);
+				});
+				// DISABLED CODE // DISABLED CODE // DISABLED CODE // DISABLED CODE
+				//next_function(error);
 			});
 		},
 	], function(error) {
