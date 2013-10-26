@@ -38,7 +38,7 @@ var PluginInterface = {
 
 	run_ahk_script: function(script, params, callback) {
 		var temp_dir = path.join(__dirname, 'temp');
-		var script_name = '_' + (new Date()).getMilliseconds() + '.ahk';
+		var script_name = '_' + (new Date()).getTime() + '.ahk';
 		var temp_file = path.join(temp_dir, script_name);
 		var _stderr = null;
 

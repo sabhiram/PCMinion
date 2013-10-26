@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=1">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/RemoteMouse/style.css">
+	<title>Remote Mouse</title>
+</head>
+
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top" id="nav_div">
+      	<div class="container">
+        	<div class="navbar-header">
+          		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+    	      	</button>
+          		<a class="navbar-brand" href="/">Remote Mouse</a>
+        	</div>
+        	<div class="navbar-collapse collapse">
+          		<ul class="nav navbar-nav navbar-right">
+            		<li><a href="/"><i class="fa fa-home"> PC Minion</i></a></li>
+            		<li><a href="#settings"><i class="fa fa-gear"> Settings</i></a></li>
+            		<li><a href="#about"><i class="fa fa-question-circle"> About</i></a></li>
+          		</ul>
+	        </div><!--/.nav-collapse -->
+    	</div>
+    </div>
+
+	<div class="row" style="">
+		<input id="keyboard_input" class="col-xs-9" style="height: 50px" placeholder="Send Keyboard Keys (AHK script friendly)"></input>
+		<div id="send_keys_btn" class="btn btn-primary col-xs-3" style="line-height: 45px; height: 50px; border-radius: 0;">Send</div>
+	</div>
+
+	<div class="row" style="background-color: #333333;" id="mouse_div">
+		<!-- <canvas class="col-xs-12" id="mouse_canvas" style="background-color: #555555;">
+			<strong>[Your browser can not use a canvas.]</strong>
+		</canvas> -->
+	</div>
+
+	<div class="row" id="footer_div">
+		<div class="btn btn-inverse col-xs-5" id="left_click_btn" style="border: 2px solid #333333; background-color: #555555; border-radius: 0; height: 64px; line-height: 46px;">Left Click</div>
+		<div class="btn btn-inverse col-xs-2" id="dbl_click_btn" style="border: 2px solid #333333; background-color: #555555; border-radius: 0; height: 64px; line-height: 46px;">2x Click</div>
+		<div class="btn btn-inverse col-xs-5" id="right_click_btn" style="border: 2px solid #333333; background-color: #555555; border-radius: 0; height: 64px; line-height: 46px;">Right Click</div>
+	</div>
+
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script src="/js/bootstrap.js"></script>
+	<script src="/js/underscore.js"></script>
+	<script src="/js/hammer.js"></script>
+	
+	<script>
+		// On document ready...
+		$(function() {
+			handle_page_resize();
+		});
+		// Anytime the window changes...
+		$(window).resize(handle_page_resize);
+
+		// Mouse movement toggles - adjust via the
+		// settings page
+		var x_scale = 2.0;
+		var y_scale = 2.0;
+
+		// Function to change sizes of the mouse area
+		// based on browser window size etc...
+		function handle_page_resize() {
+			var canvas_height = 
+				$(window).height() - 
+				( $('#nav_div').outerHeight() +
+				  $('#left_click_btn').outerHeight() +
+				  $('#keyboard_input').outerHeight() );
+			$('#mouse_div').height(canvas_height);
+		}
+
+		var lastX = null;
+		var lastY = null;
+		// Experimentally - a 64ms refresh seems to work well..
+		// using something as ridiculous as 0 will cause the
+		// pointer to be jittery, besides you don't play SC2 
+		// professionally so this is probably ok.
+		var throttled_move_mouse = _.throttle(move_mouse, 64);
+		function move_mouse(event) {
+			if(lastX && lastY) {
+				var newX = event.gesture.center.pageX;
+				var newY = event.gesture.center.pageY;
+				var xd = newX - lastX;
+				var yd = newY - lastY;
+				// Tell the server to move the host's mouse
+				$.ajax({
+					type: "POST",
+					url: '/RemoteMouse/move_mouse',
+					data: JSON.stringify({
+						x_delta: x_scale * (xd),
+						y_delta: y_scale * (yd)
+					}),
+					dataType: "json"
+				});
+				lastX = newX;
+				lastY = newY;
+			}
+		}
+		
+		// Use Hammer.js for multi-touch detection 
+		// Homepage: 	http://eightmedia.github.io/hammer.js/
+		// GitHub: 		https://github.com/EightMedia/hammer.js
+		// This lib does not support two fingered taps, maybe
+		// add it and send him a pull?
+		var mouse_div = document.getElementById("mouse_div");
+		Hammer(mouse_div, {
+			prevent_default: true,
+			no_mouseevents: true
+		}).on("tap", function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/left_click',
+			});
+		}).on("hold", function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/right_click',
+			});
+		}).on("doubletap", function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/double_click',
+			});
+		}).on("dragstart", function(event) {
+			lastX = event.gesture.center.pageX;
+			lastY = event.gesture.center.pageY;
+			console.log('start: ' + lastX + ', ' + lastY);
+		}).on("dragend", function(event) {
+			lastX = lastY = null;
+			console.log('end: ' + lastX + ', ' + lastY);
+		}).on("drag", throttled_move_mouse);
+		
+		// Handle clicking of the boring buttons...
+		$('.row').on('click', '#right_click_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/right_click',
+			});
+		});
+		$('.row').on('click', '#left_click_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/left_click',
+			});
+		});
+		$('.row').on('click', '#dbl_click_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/double_click',
+			});
+		});
+		$('.row').on('click', '#send_keys_btn', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/RemoteMouse/send_keys',
+				data: $('#keyboard_input').val(),
+				dataType: 'text'
+			});
+			$('#keyboard_input').val('');
+		});
+	</script>
+</body>
+</html>
