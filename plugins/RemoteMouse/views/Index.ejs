@@ -27,8 +27,23 @@
         	<div class="navbar-collapse collapse">
           		<ul class="nav navbar-nav navbar-right">
             		<li><a href="/"><i class="fa fa-home"> PC Minion</i></a></li>
-            		<li><a href="#settings"><i class="fa fa-gear"> Settings</i></a></li>
             		<li><a href="#about"><i class="fa fa-question-circle"> About</i></a></li>
+            		<li class="dropdown">
+            			<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-gear"></i> Settings <b class="caret"></b></a>
+			            <div class="dropdown-menu" style="overflow: hidden;">
+			            	<div class="row">
+			            		<div class="col-xs-2" align="center">X</div>
+			            		<div class="col-xs-7" id="slider_x"></div>
+			            		<div class="col-xs-3" align="center">2.3</div>
+			            	</div>
+			            	<div class="row">
+			            		<div class="col-xs-2" align="center">Y</div>
+			            		<div class="col-xs-7" id="slider_y"></div>
+			            		<div class="col-xs-3" align="center">2.1</div>
+			            	</div>
+			            </div>
+            		</li>
+            		
           		</ul>
 	        </div><!--/.nav-collapse -->
     	</div>
@@ -39,10 +54,8 @@
 		<div id="send_keys_btn" class="btn btn-primary col-xs-3" style="line-height: 45px; height: 50px; border-radius: 0;">Send</div>
 	</div>
 
+	<!-- This div is sized to fit the screen, any inputs will be tracked using Hammer.js -->
 	<div class="row" style="background-color: #333333;" id="mouse_div">
-		<!-- <canvas class="col-xs-12" id="mouse_canvas" style="background-color: #555555;">
-			<strong>[Your browser can not use a canvas.]</strong>
-		</canvas> -->
 	</div>
 
 	<div class="row" id="footer_div">
@@ -60,6 +73,8 @@
 		// On document ready...
 		$(function() {
 			handle_page_resize();
+			$('#slider_x').slider();
+			$('#slider_y').slider();
 		});
 		// Anytime the window changes...
 		$(window).resize(handle_page_resize);
@@ -82,11 +97,11 @@
 
 		var lastX = null;
 		var lastY = null;
-		// Experimentally - a 64ms refresh seems to work well..
-		// using something as ridiculous as 0 will cause the
-		// pointer to be jittery, besides you don't play SC2 
-		// professionally so this is probably ok.
-		var throttled_move_mouse = _.throttle(move_mouse, 64);
+		// Experimentally - a 32ms refresh seems to work well..
+		// since this is about 30FPS. using something as ridiculous
+		// as 0 will cause the pointer to be jittery, besides you 
+		// don't play SC2 professionally so this is probably ok.
+		var throttled_move_mouse = _.throttle(move_mouse, 32);
 		function move_mouse(event) {
 			if(lastX && lastY) {
 				var newX = event.gesture.center.pageX;
@@ -114,31 +129,36 @@
 		// This lib does not support two fingered taps, maybe
 		// add it and send him a pull?
 		var mouse_div = document.getElementById("mouse_div");
+		var wait_for_double_tap = false;
 		Hammer(mouse_div, {
 			prevent_default: true,
 			no_mouseevents: true
 		}).on("tap", function(event) {
-			$.ajax({
-				type: "POST",
-				url: '/RemoteMouse/left_click',
-			});
+			if(!wait_for_double_tap) {
+				$.ajax({
+					type: "POST",
+					url: '/RemoteMouse/left_click',
+				});
+			}
 		}).on("hold", function(event) {
 			$.ajax({
 				type: "POST",
 				url: '/RemoteMouse/right_click',
 			});
 		}).on("doubletap", function(event) {
+			wait_for_double_tap = true;
 			$.ajax({
 				type: "POST",
 				url: '/RemoteMouse/double_click',
+				success: function() {
+					wait_for_double_tap = false;
+				}
 			});
 		}).on("dragstart", function(event) {
 			lastX = event.gesture.center.pageX;
 			lastY = event.gesture.center.pageY;
-			console.log('start: ' + lastX + ', ' + lastY);
 		}).on("dragend", function(event) {
 			lastX = lastY = null;
-			console.log('end: ' + lastX + ', ' + lastY);
 		}).on("drag", throttled_move_mouse);
 		
 		// Handle clicking of the boring buttons...
@@ -147,20 +167,17 @@
 				type: "POST",
 				url: '/RemoteMouse/right_click',
 			});
-		});
-		$('.row').on('click', '#left_click_btn', function(event) {
+		}).on('click', '#left_click_btn', function(event) {
 			$.ajax({
 				type: "POST",
 				url: '/RemoteMouse/left_click',
 			});
-		});
-		$('.row').on('click', '#dbl_click_btn', function(event) {
+		}).on('click', '#dbl_click_btn', function(event) {
 			$.ajax({
 				type: "POST",
 				url: '/RemoteMouse/double_click',
 			});
-		});
-		$('.row').on('click', '#send_keys_btn', function(event) {
+		}).on('click', '#send_keys_btn', function(event) {
 			$.ajax({
 				type: "POST",
 				url: '/RemoteMouse/send_keys',
