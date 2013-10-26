@@ -92,7 +92,7 @@ var Plugin = {
 		});
 
 		app.post('/send_keys', function(request, response) {
-			console.log('Remote Mouse @ POST /right_click');
+			console.log('Remote Mouse @ POST /send_keys');
 			var data = '';
 			request.on('data', function(chunk) {
 				data += chunk;
@@ -100,6 +100,32 @@ var Plugin = {
 				PluginInterface.run_ahk_script('Send ' + data, '/f', function(error, stderr) {
 					response.send('OK');
 				});
+			});
+		});
+
+		app.post('/scroll', function(request, response) {
+			console.log('Remote Mouse @ POST /scroll');
+			var sensitivity = 10.0;
+			var data = '';
+			request.on('data', function(chunk) {
+				data += chunk;
+			}).on('end', function() {
+				var scroll_object = JSON.parse(data);
+				if(scroll_object.scroll_y > 0) {
+					var s = '';
+					for(var i = 0; i <= scroll_object.scroll_y / sensitivity; i++) { s += '{WheelDown}'}
+					PluginInterface.run_ahk_script('Send, ' + s, '/f', function(error, stderr) {
+						response.send('OK');
+					});
+				}
+				else if(scroll_object.scroll_y < 0){
+					var s = '';
+					for(var i = 0; i <= -scroll_object.scroll_y / sensitivity; i++) { s += '{WheelUp}'}
+					PluginInterface.run_ahk_script('Send, ' + s, '/f', function(error, stderr) {
+						response.send('OK');
+					});
+				}
+				
 			});
 		});
 	},
