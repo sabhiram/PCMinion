@@ -4,4 +4,12 @@ body {
 .dropdown {
 	color: #999999;
 }
-
+#mouse_div {
+	vertical-align: center;
+}
+#mouse_description_div {
+	padding: 25px;
+	padding-top: 50px;
+	color: #999999;
+	font-size: 18pt;
+}

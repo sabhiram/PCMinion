@@ -1,11 +1,13 @@
 1. Auto document Rest API + Hook to do this for all plugins
 3. Auto configure port / server name / whathaveyou
-4. 
+4. RemoteMouse should be able to two finger scroll up and down...
 
 WIP:
 ----
-2. Independant view / public management per plugin. Maybe we also add the ability to specify other folders other than public and view whilst
-still using the PluginInterface?
 
 DONE:
 -----
+2. Independant view / public management per plugin. Maybe we also add the ability to specify other folders other than public and view whilst
+still using the PluginInterface?
+
+5. Plugins can be installed as self contained packages using npm - this is cool since it can come w/ its own public / views folders.
