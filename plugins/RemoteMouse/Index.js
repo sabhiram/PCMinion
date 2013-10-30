@@ -111,20 +111,21 @@ var Plugin = {
 				data += chunk;
 			}).on('end', function() {
 				var scroll_object = JSON.parse(data);
-				if(scroll_object.scroll_y > 0) {
+				if(scroll_object.scroll > 0) {
 					var s = '';
-					for(var i = 0; i <= scroll_object.scroll_y / sensitivity; i++) { s += '{WheelDown}'}
+					for(var i = 0; i <= scroll_object.scroll / sensitivity; i++) { s += '{WheelDown}'}
 					PluginInterface.run_ahk_script('Send, ' + s, '/f', function(error, stderr) {
 						response.send('OK');
 					});
 				}
-				else if(scroll_object.scroll_y < 0){
+				else if(scroll_object.scroll < 0){
 					var s = '';
-					for(var i = 0; i <= -scroll_object.scroll_y / sensitivity; i++) { s += '{WheelUp}'}
+					for(var i = 0; i <= -scroll_object.scroll / sensitivity; i++) { s += '{WheelUp}'}
 					PluginInterface.run_ahk_script('Send, ' + s, '/f', function(error, stderr) {
 						response.send('OK');
 					});
 				}
+				else response.send('OK');
 				
 			});
 		});

@@ -2,7 +2,9 @@ var _ 				= require('underscore')._;
 var util    		= require('util');
 var path    		= require('path');
 var fs 				= require('graceful-fs');
+var request 		= require('request');
 var exec    		= require('child_process').exec;
+
 var PluginInterface = require('./../../PluginInterface.js');
 
 var m_exe_path = null;
@@ -47,21 +49,21 @@ var Plugin = {
 			}
 			else {
 				// Spawn VLC
-				exec('"' + Plugin.m_exe_path + '"', function(error, stdout, stderr) {
+				var cmd = '"' + Plugin.m_exe_path + '" --extraintf="http" --http-port="12346"';
+				console.log(cmd);
+				exec(cmd, function(error, stdout, stderr) {
 					console.log('stdout: ' + stdout);
 				    console.log('stderr: ' + stderr);
 				    if (error !== null) {
 				      console.log('exec error: ' + error);
 				    }
 				});
+				response.redirect('http://effervescence:12346/');
 			}
 		});
 
 		app.post('/volume_up', function(request, response) {
-			console.log('VLC Volume UP');
-			PluginInterface.run_ahk_script('Send ^{Up}', '', function(error, stderr) {
-				response.send('ok');
-			});
+			request.get('http://localhost:12346/status.xml')
 		});
 
 		app.post('/volume_down', function(request, response) {

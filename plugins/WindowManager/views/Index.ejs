@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 maximum-scale=1.0, user-scalable=1">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="/font-awesome/css/font-awesome.min.css">
+	<link rel="stylesheet" href="/css/bootstrap.css">
+	<link rel="stylesheet" href="/WindowManager/style.css">
+	<title>Remote Mouse</title>
+</head>
+
+<body>
+	<div class="navbar navbar-inverse navbar-fixed-top" id="nav_div">
+      	<div class="container">
+        	<div class="navbar-header">
+          		<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+            		<span class="icon-bar"></span>
+    	      	</button>
+          		<a class="navbar-brand" href="/WindowManager">Window Manager</a>
+        	</div>
+        	<div class="navbar-collapse collapse">
+          		<ul class="nav navbar-nav navbar-right">
+            		<li><a href="/"><i class="fa fa-home"> PC Minion</i></a></li>
+            		<li><a href="#about"><i class="fa fa-question-circle"> About</i></a></li>
+            		<li class="dropdown">
+            			<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-gear"></i> Settings <b class="caret"></b></a>
+			            <div class="dropdown-menu" style="overflow: hidden;">
+			            </div>
+            		</li>
+            		
+          		</ul>
+	        </div><!--/.nav-collapse -->
+    	</div>
+    </div>
+
+    <div class="row">
+	    <div class="col-xs-6 btn btn-primary" id="minimize_btn">Minimize All</div>
+	    <div class="col-xs-6 btn btn-success" id="un_minimize_btn">Un Minimize All</div>
+	</div>
+	<div class="row">
+	    <div class="col-xs-12 btn btn-warning" id="toggle_desktop_btn">Toggle Desktop</div>
+	</div>
+
+	<div class="row">
+	    <div class="col-xs-4">Profile 1</div>
+	    <div class="col-xs-4 btn btn-danger store_btn" data-profile="1">Save</div>
+	    <div class="col-xs-4 btn btn-primary load_btn" data-profile="1">Load</div>
+	</div>
+
+	<div class="row">
+	    <div class="col-xs-4">Profile 2</div>
+	    <div class="col-xs-4 btn btn-danger store_btn" data-profile="2">Save</div>
+	    <div class="col-xs-4 btn btn-primary load_btn" data-profile="2">Load</div>
+	</div>
+
+	<div class="row">
+	    <div class="col-xs-4">Profile 3</div>
+	    <div class="col-xs-4 btn btn-danger store_btn" data-profile="3">Save</div>
+	    <div class="col-xs-4 btn btn-primary load_btn" data-profile="3">Load</div>
+	</div>
+
+	<script src="/js/jquery-1.10.2.min.js"></script>
+	<script src="/js/bootstrap.js"></script>
+	<script src="/js/underscore.js"></script>
+	
+	<script>
+		// On document ready...
+		$(function() {
+
+		});
+
+		$('#minimize_btn').on('click', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/WindowManager/minimize_all',
+			});
+		});
+		$('#un_minimize_btn').on('click', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/WindowManager/un_minimize_all',
+			});
+		});
+		$('#toggle_desktop_btn').on('click', function(event) {
+			$.ajax({
+				type: "POST",
+				url: '/WindowManager/toggle_desktop',
+			});
+		});
+
+		$('.row').on('click', '.store_btn', function(event) {
+			var profile_name = 'profile' + $(this).data('profile');
+			$.ajax({
+				type: "POST",
+				url: '/WindowManager/save_profile',
+				data: JSON.stringify({
+					name: profile_name
+				}),
+				dataType: "JSON",
+				success: function(result) {
+					console.log(result);
+				}
+			});
+		}).on('click', '.load_btn', function(event) {
+			var profile_name = 'profile' + $(this).data('profile');
+			$.ajax({
+				type: "POST",
+				url: '/WindowManager/load_profile',
+				data: JSON.stringify({
+					name: profile_name
+				}),
+				dataType: "JSON",
+				success: function(result) {
+					console.log(result);
+				}
+			});
+		});
+	</script>
+</body>
+</html>

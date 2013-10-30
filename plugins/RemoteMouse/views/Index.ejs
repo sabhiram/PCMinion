@@ -127,12 +127,8 @@
 		var scroll_sensitivity = 40.0;
 		function scroll_page() {
 			if(drag_direction && two_fingers_down) {
-				var x = y = 0;
-				if(drag_direction == 'right') {
-					x = scroll_sensitivity;
-				} else if(drag_direction == 'left') {
-					x = -scroll_sensitivity;
-				} else if(drag_direction == 'down') {
+				var y = 0;
+				if(drag_direction == 'down') {
 					y = scroll_sensitivity;
 				} else if(drag_direction == 'up') {
 					y = -scroll_sensitivity;
@@ -141,8 +137,7 @@
 					type: "POST",
 					url: '/RemoteMouse/scroll',
 					data: JSON.stringify({
-						scroll_x: x,
-						scroll_y: y
+						scroll: y
 					}),
 					dataType: 'json'
 				});
@@ -194,17 +189,15 @@
 		}).on("dragleft", function(event) {
 			if(two_fingers_down) {
 				drag_direction = "left";
-				scroll_page();
 			}
 		}).on("dragright", function(event) {
 			if(two_fingers_down) {
 				drag_direction = "right";
-				scroll_page();
 			}
 		}).on("dragstart", function(event) {
 			lastX = event.gesture.center.pageX;
 			lastY = event.gesture.center.pageY;
-		}).on("dragend", function(event) {
+		}).on("dragend release", function(event) {
 			lastX = lastY = null;
 			two_fingers_down = false;
 		}).on("drag", throttled_move_mouse);
