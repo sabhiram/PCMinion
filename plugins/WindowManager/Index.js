@@ -162,21 +162,32 @@ var Plugin = {
 				var profile_name 	= profile_request['name'];
 				var profile_path    = path.join(__dirname, 'profiles.json');
 				var script_path 	= path.join(__dirname, 'scripts', 'restore_window.ahk');
-
-				console.log('Loaded profile');
-				var profile = Profile[profile_name];
-
-				var parallel_functions = _.map(profile.windows.reverse(), function(item) {
-					return function(callback) {
-						exec([script_path, item.id, item.x, item.y, item.width, item.height].join(' '), function(error, stdout, stderr) {
-							//console.log('StdOut: ' + stdout);
-							//console.log('StdErr: ' + stderr);
-							callback(error);
+				Async.waterfall([
+					// 1. Load the profile..
+					function load_profile(next_function) {
+						fs.readFile(profile_path, next_function);
+					},
+					// 2. Parse it...
+					function parse_profile(data, next_function) {
+						console.log('Loaded profile');
+						var profiles = JSON.parse(data);
+						var profile = profiles[profile_name];
+						
+						var parallel_functions = _.map(profile.windows.reverse(), function(item) {
+							return function(callback) {
+								exec([script_path, item.id, item.x, item.y, item.width, item.height].join(' '), function(error, stdout, stderr) {
+									//console.log('StdOut: ' + stdout);
+									//console.log('StdErr: ' + stderr);
+									callback(error);
+								});
+							};
 						});
-					};
-				});
-				Async.parallel(parallel_functions, function(error) {
-					console.log('Done w/ parallel functions for window restore');
+						Async.parallel(parallel_functions, function(error) {
+							console.log('Done w/ parallel functions for window restore');
+							next_function(error);
+						});
+					}
+				], function(error) {
 					if(error) {
 						console.log('Unable to process load window profile request. Error: ' + error);
 						response.send({'error': error});
@@ -197,10 +208,23 @@ var Plugin = {
 				var profile_name 	= profile_request['name'];
 				var profile_path    = path.join(__dirname, 'profiles.json');
 
-				delete Profile[profile_name];
-				fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', function(error) {
+				Async.waterfall([
+					// 1. Load the profile..
+					function load_profiles(next_function) {
+						fs.readFile(profile_path, next_function);
+					},
+					// 2. Parse it...
+					function delete_profile(data, next_function) {
+						console.log('Loaded profile');
+						var profiles = JSON.parse(data);
+						delete profiles[profile_name];
+						Profile = profiles;
+						// Save off profile..
+						fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', next_function);
+					}
+				], function(error) {
 					if(error) {
-						console.log('Unable to process delete window profile request. Error: ' + error);
+						console.log('Unable to process load window profile request. Error: ' + error);
 						response.send({'error': error});
 					}
 					else {
