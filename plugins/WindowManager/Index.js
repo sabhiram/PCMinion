@@ -6,6 +6,7 @@ var exec    = require('child_process').exec;
 var Async 	= require('async');
 
 var PluginInterface = null;
+var Profile = null;
 
 var Plugin = {
 
@@ -13,13 +14,34 @@ var Plugin = {
 	init: function(interface, callback) {
 		console.log('Initializing the WindowManager plugin');
 		PluginInterface = interface;
-		
-		// Init the plugin by calling the super init
-		PluginInterface.init_express(__dirname, function(error, app) {
-			if(error) callback(error, null);
-
-			Plugin.setup_routes(app);
-
+		var profile_file = path.join(__dirname, 'profiles.json');
+		Async.waterfall([
+			// Load profile var...
+			function load_profile_json(next_function) {
+				fs.readFile(profile_file, 'utf-8', function(error, data) {
+					if(error) {
+						Profile = {};
+						fs.writeFile(profile_file, '{}', 'utf-8', next_function);
+					}
+					else {
+						Profile = JSON.parse(data);
+						next_function();
+					}
+				});
+			},
+			// Initialize the plugin's express app using the 
+			// global interface
+			function initialize_app(next_function) {
+				// Init the plugin by calling the super init
+				PluginInterface.init_express(__dirname, function(error, app) {
+					if(error) next_function(error);
+					else {
+						Plugin.setup_routes(app);
+						next_function(error, app)
+					}
+				});
+			},
+		], function(error, app) {
 			callback(error, app, [
 				'The WindowManager is a simple plugin which uses AHK on the backend',
 				'to do basic window management. You can easily save multiple different',
@@ -37,7 +59,11 @@ var Plugin = {
 		// GET /
 		app.get('/', function(request, response) {
 			console.log('WindowManager @ GET /');
-			response.render('Index');
+			response.render('Index', {
+				profiles: _.map(Profile, function(profile) {
+					return profile['name'];
+				}),
+			});
 		});
 
 		app.post('/minimize_all', function(request, response) {
@@ -67,13 +93,11 @@ var Plugin = {
 				var profile_name 	= profile_request['name'];
 				var script_path 	= path.join(__dirname, 'scripts', 'get_current_window_positions.ahk');
 				var csv_file    	= path.join(__dirname, 'scripts', 'window_positions.txt');
-				var profile_path    = path.join(__dirname, profile_name + '.json');
+				var profile_path    = path.join(__dirname, 'profiles.json');
 				var profile = {
 					name: profile_name,
 					windows: []
 				};
-
-				console.log('SAVE PROFILE: ' + profile_name);
 
 				Async.waterfall([
 					// 1. Verify script exists
@@ -90,8 +114,8 @@ var Plugin = {
 					// 2. Run the AHK script to get window positions...
 					function run_ahk_script(next_function) {
 						exec(script_path, function(error, stdout, stderr) {
-							console.log('StdOut: ' + stdout);
-							console.log('StdErr: ' + stderr);
+							//console.log('StdOut: ' + stdout);
+							//console.log('StdErr: ' + stderr);
 							next_function(error);
 						});
 					},
@@ -108,8 +132,10 @@ var Plugin = {
 							var line_arr = _.map(lines[idx].split(','), function(item) {return item.trim();});
 							if(line_arr.length > 1) profile.windows.push(_.object(['id','title', 'class', 'x', 'y', 'width', 'height'], line_arr));
 						}
+						Profile[profile_name] = profile;
+
 						// Save off profile..
-						fs.writeFile(profile_path, JSON.stringify(profile, null, 4), 'utf-8', next_function);
+						fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', next_function);
 					},
 					// 5. Delete the temp file..
 					function delete_position_csv_file(next_function) {
@@ -134,34 +160,47 @@ var Plugin = {
 			}).on('end', function() {
 				var profile_request = JSON.parse(data);
 				var profile_name 	= profile_request['name'];
-				var profile_path    = path.join(__dirname, profile_name + '.json');
+				var profile_path    = path.join(__dirname, 'profiles.json');
 				var script_path 	= path.join(__dirname, 'scripts', 'restore_window.ahk');
-				Async.waterfall([
-					// 1. Load the profile..
-					function load_profile(next_function) {
-						fs.readFile(profile_path, next_function);
-					},
-					// 2. Parse it...
-					function parse_profile(data, next_function) {
-						console.log('Loaded profile');
-						var profile = JSON.parse(data);
-						var parallel_functions = _.map(profile.windows.reverse(), function(item) {
-							return function(callback) {
-								exec([script_path, item.id, item.x, item.y, item.width, item.height].join(' '), function(error, stdout, stderr) {
-									console.log('StdOut: ' + stdout);
-									console.log('StdErr: ' + stderr);
-									callback(error);
-								});
-							};
+
+				console.log('Loaded profile');
+				var profile = Profile[profile_name];
+
+				var parallel_functions = _.map(profile.windows.reverse(), function(item) {
+					return function(callback) {
+						exec([script_path, item.id, item.x, item.y, item.width, item.height].join(' '), function(error, stdout, stderr) {
+							//console.log('StdOut: ' + stdout);
+							//console.log('StdErr: ' + stderr);
+							callback(error);
 						});
-						Async.parallel(parallel_functions, function(error) {
-							console.log('Done w/ parallel functions for window restore');
-							next_function(error);
-						});
-					}
-				], function(error) {
+					};
+				});
+				Async.parallel(parallel_functions, function(error) {
+					console.log('Done w/ parallel functions for window restore');
 					if(error) {
 						console.log('Unable to process load window profile request. Error: ' + error);
+						response.send({'error': error});
+					}
+					else {
+						response.send({'result': 'success'});
+					}
+				});
+			});
+		});
+
+		app.post('/delete_profile', function(request, response) {
+			var data = '';
+			request.on('data', function(chunk) {
+				data += chunk;
+			}).on('end', function() {
+				var profile_request = JSON.parse(data);
+				var profile_name 	= profile_request['name'];
+				var profile_path    = path.join(__dirname, 'profiles.json');
+
+				delete Profile[profile_name];
+				fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', function(error) {
+					if(error) {
+						console.log('Unable to process delete window profile request. Error: ' + error);
 						response.send({'error': error});
 					}
 					else {

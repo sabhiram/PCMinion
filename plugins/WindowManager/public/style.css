@@ -1,8 +1,24 @@
 body {
 	margin-top: 51px;
 	border-radius: 0;
+	overflow: hidden;
+	background-color: #222222;
+	color: #787878;
 }
 .btn {
 	border-radius: 0;	
+	border: 2px solid #222222;
+	height: 60px;
+	line-height: 60px;
+}
+#profile_name_input {
+	height: 60px;
+	border: 2px solid #222222;
+}
+.profile_name {
+	color: #eeeeee;
+	font-size: 17pt;
+	text-align: center;
+	line-height: 60px;
 	height: 60px;
 }
