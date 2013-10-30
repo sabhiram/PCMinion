@@ -113,10 +113,6 @@
 				});
 				lastX = newX;
 				lastY = newY;
-				$('#keyboard_input').val(JSON.stringify({
-					x_delta: x_scale * (xd),
-					y_delta: y_scale * (yd)
-				}));
 			}
 		}
 		
@@ -125,6 +121,7 @@
 		var two_fingers_down = false;
 		var drag_direction = null;
 		var scroll_sensitivity = 40.0;
+		var count = 0;
 		function scroll_page() {
 			if(drag_direction && two_fingers_down) {
 				var y = 0;
@@ -176,30 +173,25 @@
 		}).on("pinch", function(event) {
 			two_fingers_down = true;
 		// }).on("pinchin pinchout", function(event) {
-		}).on("dragdown", function(event) {
-			if(two_fingers_down) {
-				drag_direction = "down";
-				scroll_page();
-			}
-		}).on("dragup", function(event) {
-			if(two_fingers_down) {
-				drag_direction = "up";
-				scroll_page();
-			}
-		}).on("dragleft", function(event) {
-			if(two_fingers_down) {
-				drag_direction = "left";
-			}
-		}).on("dragright", function(event) {
-			if(two_fingers_down) {
-				drag_direction = "right";
-			}
 		}).on("dragstart", function(event) {
 			lastX = event.gesture.center.pageX;
 			lastY = event.gesture.center.pageY;
 		}).on("dragend release", function(event) {
 			lastX = lastY = null;
 			two_fingers_down = false;
+			drag_direction = null;
+		}).on("tdragdown", function(event) {
+			$('#keyboard_input').val('TWO FINGERS DOWN' + count++);
+			drag_direction = 'down';
+			scroll_page();
+		}).on("tdragup", function(event) {
+			$('#keyboard_input').val('TWO FINGERS UP' + count++);			
+			drag_direction = 'up';
+			scroll_page();
+		}).on("tdragleft", function(event) {
+			$('#keyboard_input').val('TWO FINGERS LEFT' + count++);			
+		}).on("tdragright", function(event) {
+			$('#keyboard_input').val('TWO FINGERS RIGHT' + count++);			
 		}).on("drag", throttled_move_mouse);
 		
 		// Handle clicking of the boring buttons...
