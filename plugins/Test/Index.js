@@ -4,7 +4,7 @@ var path    = require('path');
 var fs 		= require('graceful-fs');
 var exec    = require('child_process').exec;
 
-var PluginInterface = require('./../../PluginInterface.js');
+var PluginInterface = null;
 
 // Begin module definition here. You can alternatively just define
 // this in a var and export that if you have OCD like that.
@@ -23,8 +23,9 @@ var Plugin = {
 	// Inputs: callback - function to call once we are done. The function
 	// 					  takes the form of function(error, app, description)
 	//					  which are returned to the harness framework.
-	init: function(callback) {
+	init: function(interface, callback) {
 		console.log('Initializing the Test Plugin');
+		PluginInterface = interface;
 
 		// Since we are lazy, use the "default" method to setup express
 		// this will assume that we want to use ejs as the templating

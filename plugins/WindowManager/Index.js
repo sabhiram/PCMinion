@@ -5,14 +5,15 @@ var fs 		= require('graceful-fs');
 var exec    = require('child_process').exec;
 var Async 	= require('async');
 
-var PluginInterface = require('./../../PluginInterface.js');
+var PluginInterface = null;
 
 var Plugin = {
 
 	// Default init - calls super init
-	init: function(callback) {
+	init: function(interface, callback) {
 		console.log('Initializing the WindowManager plugin');
-
+		PluginInterface = interface;
+		
 		// Init the plugin by calling the super init
 		PluginInterface.init_express(__dirname, function(error, app) {
 			if(error) callback(error, null);

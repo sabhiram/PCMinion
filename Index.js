@@ -8,6 +8,7 @@ var Async   = require('async');
 
 // Custom console overload
 var Console = require('./Console.js');
+var PluginInterface = require('./PluginInterface.js');
 
 // Global settings, normally this is configured on first
 // use of server
@@ -139,11 +140,11 @@ function setup_plugin_routes(callback) {
 				// been npm installed :). Usage would be somethign like 
 				// npm install PCM_VLCRemote --save or something like that
 				// then we would be able to load it thusly
-				load_plugin('Test2', 'Test2', app, function(error) {
-					next_function(error);
-				});
+				// load_plugin('Test2', 'Test2', app, function(error) {
+				// 	next_function(error);
+				// });
 				// DISABLED CODE // DISABLED CODE // DISABLED CODE // DISABLED CODE
-				//next_function(error);
+				next_function(error);
 			});
 		},
 	], function(error) {
@@ -158,7 +159,7 @@ function load_plugin(plugin_name, plugin_file, app, callback) {
 	Console.debug('    FileName 	- ' + plugin_file);
 
 	var Plugin = require(plugin_file);
-	Plugin.init(function(error, plugin_app, plugin_description) {
+	Plugin.init(PluginInterface, function(error, plugin_app, plugin_description) {
 		if(typeof(plugin_description) == 'undefined') {
 			plugin_description = 'No description for this plugin, bad developer!';
 		}
