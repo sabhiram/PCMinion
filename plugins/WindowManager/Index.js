@@ -172,7 +172,7 @@ var Plugin = {
 						console.log('Loaded profile');
 						var profiles = JSON.parse(data);
 						var profile = profiles[profile_name];
-						
+
 						var parallel_functions = _.map(profile.windows.reverse(), function(item) {
 							return function(callback) {
 								exec([script_path, item.id, item.x, item.y, item.width, item.height].join(' '), function(error, stdout, stderr) {
@@ -217,8 +217,7 @@ var Plugin = {
 					function delete_profile(data, next_function) {
 						console.log('Loaded profile');
 						var profiles = JSON.parse(data);
-						delete profiles[profile_name];
-						Profile = profiles;
+						delete Profile[profile_name];
 						// Save off profile..
 						fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', next_function);
 					}
