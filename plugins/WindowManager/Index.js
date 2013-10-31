@@ -6,7 +6,7 @@ var exec    = require('child_process').exec;
 var Async 	= require('async');
 
 var PluginInterface = null;
-var Profile = null;
+var Profiles = null;
 
 var Plugin = {
 
@@ -20,11 +20,11 @@ var Plugin = {
 			function load_profile_json(next_function) {
 				fs.readFile(profile_file, 'utf-8', function(error, data) {
 					if(error) {
-						Profile = {};
+						Profiles = {};
 						fs.writeFile(profile_file, '{}', 'utf-8', next_function);
 					}
 					else {
-						Profile = JSON.parse(data);
+						Profiles = JSON.parse(data);
 						next_function();
 					}
 				});
@@ -59,10 +59,12 @@ var Plugin = {
 		// GET /
 		app.get('/', function(request, response) {
 			console.log('WindowManager @ GET /');
+			var p = [];
+			for(key in Profiles) {
+				p.push(key);
+			}
 			response.render('Index', {
-				profiles: _.map(Profile, function(profile) {
-					return profile['name'];
-				}),
+				profiles: p,
 			});
 		});
 
@@ -79,7 +81,7 @@ var Plugin = {
 		});
 
 		app.post('/toggle_desktop', function(request, response) {
-			PluginInterface.run_ahk_script('Send, #d', '', function(error, stderr) {
+			PluginInterface.run_ahk_script('Send #d', '', function(error, stderr) {
 				response.send('OK');
 			});
 		});
@@ -130,12 +132,20 @@ var Plugin = {
 						var lines = data.split('\r\n');
 						for(idx in lines) { 
 							var line_arr = _.map(lines[idx].split(','), function(item) {return item.trim();});
-							if(line_arr.length > 1) profile.windows.push(_.object(['id','title', 'class', 'x', 'y', 'width', 'height'], line_arr));
+							if(line_arr.length > 1) {
+								var o = _.object(['id','title', 'class', 'x', 'y', 'width', 'height', 'state'], line_arr);
+								if(o['title'].match(/Progman/)) {
+									// ignore list
+								}
+								else {
+									profile.windows.push(o);
+								}
+							} 
 						}
-						Profile[profile_name] = profile;
+						Profiles[profile_name] = profile;
 
 						// Save off profile..
-						fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', next_function);
+						fs.writeFile(profile_path, JSON.stringify(Profiles, null, 4), 'utf-8', next_function);
 					},
 					// 5. Delete the temp file..
 					function delete_position_csv_file(next_function) {
@@ -163,6 +173,13 @@ var Plugin = {
 				var profile_path    = path.join(__dirname, 'profiles.json');
 				var script_path 	= path.join(__dirname, 'scripts', 'restore_window.ahk');
 				Async.waterfall([
+					// 0. Minimize all windows... TODO: This is needed so
+					// new windows will be hidden away....
+					// function minimize_all(next_function) {
+					// 	PluginInterface.run_ahk_script(['SetWinDelay, -1','Send, #d'].join('\r\n'), '', function(error, stderr) {
+					// 		next_function();
+					// 	});
+					// },
 					// 1. Load the profile..
 					function load_profile(next_function) {
 						fs.readFile(profile_path, next_function);
@@ -175,7 +192,8 @@ var Plugin = {
 
 						var parallel_functions = _.map(profile.windows.reverse(), function(item) {
 							return function(callback) {
-								exec([script_path, item.id, item.x, item.y, item.width, item.height].join(' '), function(error, stdout, stderr) {
+								var state = ( item.state > 0 ) ? 'max' : ( item.state < 0 ) ? 'min' : '';
+								exec([script_path, item.id, item.x, item.y, item.width, item.height, state].join(' '), function(error, stdout, stderr) {
 									//console.log('StdOut: ' + stdout);
 									//console.log('StdErr: ' + stderr);
 									callback(error);
@@ -217,9 +235,9 @@ var Plugin = {
 					function delete_profile(data, next_function) {
 						console.log('Loaded profile');
 						var profiles = JSON.parse(data);
-						delete Profile[profile_name];
+						delete Profiles[profile_name];
 						// Save off profile..
-						fs.writeFile(profile_path, JSON.stringify(Profile, null, 4), 'utf-8', next_function);
+						fs.writeFile(profile_path, JSON.stringify(Profiles, null, 4), 'utf-8', next_function);
 					}
 				], function(error) {
 					if(error) {

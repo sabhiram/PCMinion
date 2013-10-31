@@ -14,28 +14,34 @@ app.controller('ProfileController', function ProfileController($scope, $http) {
 
 	$scope.load_profile = function(event) {
 		var profile_name = $(event.target).data('profile');
-		$http.post('/WindowManager/load_profile', {
-			name: profile_name
-		}).success(function(result) {
-		});
+		if(typeof(profile_name) != 'undefined') {
+			$http.post('/WindowManager/load_profile', {
+				name: profile_name
+			}).success(function(result) {
+			});
+		}
 	}
 
 	$scope.save_profile = function(event) {
 		var profile_name = $(event.target).data('profile');
-		$http.post('/WindowManager/save_profile', {
-			name: profile_name
-		}).success(function(result) {
-		});	
+		if(typeof(profile_name) != 'undefined') {
+			$http.post('/WindowManager/save_profile', {
+				name: profile_name
+			}).success(function(result) {
+			});	
+		}
 	}
 
 	$scope.delete_profile = function(event) {
 		var profile_name = $(event.target).data('profile');
-		$http.post('/WindowManager/delete_profile', {
-			name: profile_name
-		}).success(function(result) {
-			// Remove it from the scope
-			var idx = _.indexOf($scope.profiles, profile_name);
-			$scope.profiles.splice(idx, 1);
-		});
+		if(typeof(profile_name) != 'undefined') {
+			$http.post('/WindowManager/delete_profile', {
+				name: profile_name
+			}).success(function(result) {
+				// Remove it from the scope
+				var idx = _.indexOf($scope.profiles, profile_name);
+				$scope.profiles.splice(idx, 1);
+			});
+		}
 	}
 });
